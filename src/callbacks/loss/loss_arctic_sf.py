@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from pytorch3d.transforms.rotation_conversions import axis_angle_to_matrix
+# from pytorch3d.transforms.rotation_conversions import matrix_to_axis_angle
 
 from src.utils.loss_modules import (
     compute_contact_devi_loss,
@@ -51,6 +52,8 @@ def compute_loss(pred, gt, meta_info, args):
 
     # reshape
     gt_pose_r = axis_angle_to_matrix(gt_pose_r.reshape(-1, 3)).reshape(-1, 16, 3, 3)
+    # reverse 
+    # matrix_to_axis_angle(gt_pose_r.reshape(-1, 3, 3)).reshape(-1, 48)
     gt_pose_l = axis_angle_to_matrix(gt_pose_l.reshape(-1, 3)).reshape(-1, 16, 3, 3)
 
     # Compute loss on MANO parameters

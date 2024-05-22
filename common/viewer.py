@@ -128,11 +128,12 @@ class ARCTICViewer:
             assert isinstance(mesh, Meshes)
         assert isinstance(data, ViewerData)
 
-    def render_seq(self, batch, out_folder="./render_out"):
+    def render_seq(self, batch, out_folder="./render_out", no_model=False):
         meshes_all, data = batch
         self.setup_viewer(data)
-        for mesh in meshes_all.values():
-            self.v.scene.add(mesh)
+        if not no_model:
+            for mesh in meshes_all.values():
+                self.v.scene.add(mesh)
         if self.interactive:
             self.view_interactive()
         else:

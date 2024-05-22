@@ -35,7 +35,7 @@ def main():
     args = construct_args()
 
     args.experiment = None
-    args.exp_key = "xxxxxxx"
+    args.exp_key =  "3558f1342"
 
     device = "cuda:0"
     wrapper = factory.fetch_model(args).to(device)
@@ -64,14 +64,21 @@ def main():
     logger.info(f"Hyperparameters: \n {pformat(args)}")
     logger.info(f"Seqs to process ({len(seqs)}): {seqs}")
 
+    # select output
     if args.extraction_mode in ["eval_pose"]:
         from src.extraction.keys.eval_pose import KEYS
     elif args.extraction_mode in ["eval_field"]:
         from src.extraction.keys.eval_field import KEYS
     elif args.extraction_mode in ["submit_pose"]:
-        from src.extraction.keys.submit_pose import KEYS
+        if args.local:
+            from src.extraction.keys.eval_pose import KEYS
+        else:
+            from src.extraction.keys.submit_pose import KEYS
     elif args.extraction_mode in ["submit_field"]:
-        from src.extraction.keys.submit_field import KEYS
+        if args.local:
+            from src.extraction.keys.eval_field import KEYS
+        else:
+            from src.extraction.keys.submit_field import KEYS
     elif args.extraction_mode in ["feat_pose"]:
         from src.extraction.keys.feat_pose import KEYS
     elif args.extraction_mode in ["feat_field"]:
@@ -98,7 +105,10 @@ def main():
                 batch = thing.thing2dev(batch, device)
                 inputs, targets, meta_info = batch
                 if "submit_" in args.extraction_mode:
-                    out_dict = wrapper.inference(inputs, meta_info)
+                    if args.local:
+                        out_dict = wrapper.forward(inputs, targets, meta_info, "extract")
+                    else:
+                        out_dict = wrapper.inference(inputs, meta_info)
                 else:
                     out_dict = wrapper.forward(inputs, targets, meta_info, "extract")
                 out_dict = xdict(out_dict)

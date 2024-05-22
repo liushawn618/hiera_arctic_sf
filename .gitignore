@@ -1,3 +1,14 @@
 .DS_Store
 __pycache__
-/data
+data
+.old_data
+.vscode
+logs
+downloads
+outputs
+metrics_results
+render_out
+.cometml-runs
+.desperated
+metrics_result
+.env

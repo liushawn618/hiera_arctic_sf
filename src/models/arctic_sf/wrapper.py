@@ -3,13 +3,15 @@ from src.callbacks.process.process_arctic import process_data
 from src.callbacks.vis.visualize_arctic import visualize_all
 from src.models.arctic_sf.model import ArcticSF
 from src.models.generic.wrapper import GenericWrapper
+from src.models.config import ModelConfig
 
 
 class ArcticSFWrapper(GenericWrapper):
     def __init__(self, args):
         super().__init__(args)
         self.model = ArcticSF(
-            backbone="resnet50",
+            # backbone="resnet50",
+            backbone=ModelConfig.backbone,
             focal_length=args.focal_length,
             img_res=args.img_res,
             args=args,

@@ -8,13 +8,14 @@ from src.callbacks.process.process_field import process_data
 from src.callbacks.vis.visualize_field import visualize_all
 from src.models.field_lstm.model import FieldLSTM
 from src.models.generic.wrapper import GenericWrapper
-
+from src.models.config import ModelConfig
 
 class FieldLSTMWrapper(GenericWrapper):
     def __init__(self, args):
         super().__init__(args)
         self.model = FieldLSTM(
-            "resnet50",
+            #"resnet50",
+            ModelConfig.backbone,
             args.focal_length,
             args.img_res,
             args.window_size,

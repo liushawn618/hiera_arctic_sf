@@ -27,6 +27,7 @@ def prepare_data(full_seq_name, exp_key, data_keys, layers, device, task, eval_p
         gt_folder = op.join("./eval_server_gt_field", full_seq_name)
     else:
         gt_folder = folder_p
+    logger.info(f"Reading folder: {folder_p}")
     logger.info(f"Reading keys: {data_keys}")
     batch = read_keys(gt_folder, folder_p, keys=data_keys, verbose=False)
     batch = xdict(batch)
