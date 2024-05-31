@@ -253,7 +253,12 @@ def std_interface(out_list):
         all_seqs.append(seq_name)
         cam_ids.append(int(cam_id))
 
-    assert len(set(all_seqs)) == 1
+    if len(set(all_seqs)) != 1:
+        answer = input(f"WARN:: Multiple sequences detected! ->{set(all_seqs)}, continue? (y/[n]) ")
+        if answer != "y":
+            raise ValueError("Multiple sequences detected!")
+
+    # assert len(set(all_seqs)) == 1
     cam_ids = np.array(cam_ids)
     all_cams = list(set(cam_ids))
     out_cam = {}

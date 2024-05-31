@@ -4,32 +4,42 @@ from easydict import EasyDict
 
 from common.args_utils import set_default_params
 from src.parsers.generic_parser import add_generic_args
+from src.parsers.ref_parser import add_ref_parser
 
 
 def construct_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--no_log", action="store_true")
+    parser.add_argument("--clear_log", action="store_true")
     parser.add_argument(
         "--method",
         type=str,
-        default=None,
-        choices=[None, "arctic_sf", "arctic_lstm", "field_sf", "field_lstm"],
+        default="arctic_sf",
+        choices=[None, "arctic_sf", "pts_arctic_sf", "arctic_lstm", "field_sf", "field_lstm", "ref_field_sf", "ref_crop_arctic_sf"],
     )
+
     parser.add_argument("--exp_key", type=str, default=None)
     parser.add_argument("--extraction_mode", type=str, default=None)
     parser.add_argument("--img_feat_version", type=str, default=None)
     parser.add_argument("--window_size", type=int, default=None)
     parser.add_argument("--eval", action="store_true")
+    parser.add_argument("--local", action="store_true")
     parser = add_generic_args(parser)
+    parser = add_ref_parser(parser)
     args = EasyDict(vars(parser.parse_args()))
 
-    if args.method in ["arctic_sf"]:
+    if args.method in ["arctic_sf", "pts_arctic_sf"]:
         import src.parsers.configs.arctic_sf as config
+    elif args.method in ["ref_crop_arctic_sf"]:
+        import src.parsers.configs.ref_crop_arctic_sf as config
     elif args.method in ["arctic_lstm"]:
         import src.parsers.configs.arctic_lstm as config
     elif args.method in ["field_sf"]:
         import src.parsers.configs.field_sf as config
     elif args.method in ["field_lstm"]:
         import src.parsers.configs.field_lstm as config
+    elif args.method in ["ref_field_sf"]:
+        import src.parsers.configs.field_sf as config
     else:
         assert False
 

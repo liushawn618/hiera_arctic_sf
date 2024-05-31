@@ -7,7 +7,7 @@ def set_default_params(args, default_args):
     custom_dict = {}
     for key, val in args.items():
         if val is None:
-            args[key] = default_args[key]
+            args[key] = default_args.get(key)
         else:
             custom_dict[key] = val
 

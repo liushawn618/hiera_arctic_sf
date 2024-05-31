@@ -1,0 +1,1 @@
+python multi_process_img/run_task.py -n 36 -q

@@ -8,6 +8,7 @@ from src.nets.pointnet import PointNetfeat
 
 
 class Upsampler(nn.Module):
+    #upsampling layer
     def __init__(self, in_dim, out_dim):
         super().__init__()
         self.upsampling = torch.nn.Linear(in_dim, out_dim)
@@ -20,6 +21,7 @@ class Upsampler(nn.Module):
 
 
 class RegressHead(nn.Module):
+    #distance regression head
     def __init__(self, input_dim):
         super().__init__()
 
@@ -50,7 +52,8 @@ class FieldSF(nn.Module):
         self.backbone = resnet(pretrained=True)
         feat_dim = get_backbone_info(backbone)["n_output_channels"]
         self.arti_head = ArtiHead(focal_length=focal_length, img_res=img_res)
-
+        
+        #img_feat.down
         img_down_dim = 512
         img_mid_dim = 512
         pt_out_dim = 512
@@ -61,6 +64,7 @@ class FieldSF(nn.Module):
             nn.ReLU(),
         )  # downsize image features
 
+        #pointnet backbone
         pt_shallow_dim = 512
         pt_mid_dim = 512
         self.point_backbone = PointNetfeat(
@@ -70,12 +74,13 @@ class FieldSF(nn.Module):
             out_dim=pt_out_dim,
         )
         pts_dim = pt_shallow_dim + pt_out_dim
+        #regressor
         self.dist_head_or = RegressHead(pts_dim)
         self.dist_head_ol = RegressHead(pts_dim)
         self.dist_head_ro = RegressHead(pts_dim)
         self.dist_head_lo = RegressHead(pts_dim)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
-
+        #upsample
         self.num_v_sub = 195  # mano subsampled
         self.num_v_o_sub = 300 * 2  # object subsampled
         self.num_v_o = 4000  # object
@@ -94,7 +99,7 @@ class FieldSF(nn.Module):
         dist_ro = self.dist_head_ro(pts_r_feat)
         dist_lo = self.dist_head_lo(pts_l_feat)
         dist_or = self.dist_head_or(pts_o_feat)
-        dist_ol = self.dist_head_ol(pts_o_feat)
+        dist_ol =  self.dist_head_ol(pts_o_feat)
         return dist_ro, dist_lo, dist_or, dist_ol
 
     def forward(self, inputs, meta_info):

@@ -9,9 +9,9 @@ from src.nets.obj_heads.obj_head import ArtiHead
 from src.nets.obj_heads.obj_hmr import ObjectHMR
 
 
-class ArcticSF(nn.Module):
+class RefCropArcticSF(nn.Module):
     def __init__(self, backbone, focal_length, img_res, args):
-        super(ArcticSF, self).__init__()
+        super(RefCropArcticSF, self).__init__()
         self.args = args
         if backbone == "resnet50":
             from src.nets.backbone.resnet import resnet50 as resnet
@@ -40,10 +40,27 @@ class ArcticSF(nn.Module):
         self.focal_length = focal_length
 
     def forward(self, inputs, meta_info):
+        images_r=inputs["ref_img_r_rgb"]
+        images_l=inputs["ref_img_l_rgb"]
+        images_obj=inputs["ref_img_o_rgb"]
+        
+        features_r = self.backbone(images_r)
+        features_l = self.backbone(images_l)
+        features_obj = self.backbone(images_obj)
+        
+        # feat_vec_r = features.view(features_r.shape[0], features_r.shape[1], -1).sum(dim=2)
+
+        hmr_output_r_ref = self.head_r(features_r)
+        hmr_output_l_ref = self.head_l(features_l)
+        hmr_output_obj_ref = self.head_o(features_obj)
+
+
         images = inputs["img"]
         query_names = meta_info["query_names"]
         K = meta_info["intrinsics"]
         features = self.backbone(images)
+        
+        
         feat_vec = features.view(features.shape[0], features.shape[1], -1).sum(dim=2)
 
         hmr_output_r = self.head_r(features)
@@ -56,34 +73,31 @@ class ArcticSF(nn.Module):
         root_o = hmr_output_o["cam_t.wp"]
 
         mano_output_r = self.mano_r(
-            rotmat=hmr_output_r["pose"],
-            shape=hmr_output_r["shape"],
+            rotmat=hmr_output_r_ref["pose"],
+            shape=hmr_output_r_ref["shape"],
             K=K,
-            cam=root_r,
+            cam=root_r
         )
 
         mano_output_l = self.mano_l(
-            rotmat=hmr_output_l["pose"],
-            shape=hmr_output_l["shape"],
+            rotmat=hmr_output_l_ref["pose"],
+            shape=hmr_output_l_ref["shape"],
             K=K,
             cam=root_l,
         )
 
         # fwd mesh when in val or vis
         arti_output = self.arti_head(
-            rot=hmr_output_o["rot"],
-            angle=hmr_output_o["radian"],
+            rot=hmr_output_obj_ref["rot"],
+            angle=hmr_output_obj_ref["radian"],
             query_names=query_names,
             cam=root_o,
             K=K,
         )
 
-        root_r_init = hmr_output_r["cam_t.wp.init"]
-        root_l_init = hmr_output_l["cam_t.wp.init"]
-        root_o_init = hmr_output_o["cam_t.wp.init"]
-        mano_output_r["cam_t.wp.init.r"] = root_r_init
-        mano_output_l["cam_t.wp.init.l"] = root_l_init
-        arti_output["cam_t.wp.init"] = root_o_init
+        mano_output_r["cam_t.wp.init.r"] = hmr_output_r_ref["cam_t.wp.init"]
+        mano_output_l["cam_t.wp.init.l"] = hmr_output_l_ref["cam_t.wp.init"]
+        arti_output["cam_t.wp.init"] = hmr_output_obj_ref["cam_t.wp.init"]
 
         mano_output_r = ld_utils.prefix_dict(mano_output_r, "mano.")
         mano_output_l = ld_utils.prefix_dict(mano_output_l, "mano.")

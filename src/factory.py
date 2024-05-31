@@ -3,6 +3,9 @@ from torch.utils.data import DataLoader
 
 from common.torch_utils import reset_all_seeds
 from src.datasets.arctic_dataset import ArcticDataset
+from src.datasets.ref_arctic_dataset import RefArcticDataset
+from src.datasets.ref_crop_arctic_dataset import RefCropArcticDataset
+from src.datasets.ref_crop_arctic_dataset_eval import RefCropArcticDatasetEval
 from src.datasets.arctic_dataset_eval import ArcticDatasetEval
 from src.datasets.tempo_dataset import TempoDataset
 from src.datasets.tempo_inference_dataset import TempoInferenceDataset
@@ -10,9 +13,11 @@ from src.datasets.tempo_inference_dataset_eval import TempoInferenceDatasetEval
 
 
 def fetch_dataset_eval(args, seq=None):
-    if args.method in ["arctic_sf"]:
+    if args.method in ["arctic_sf", "pts_arctic_sf"]:
         DATASET = ArcticDatasetEval
-    elif args.method in ["field_sf"]:
+    elif args.method in ["ref_crop_arctic_sf"]:
+        DATASET = RefCropArcticDatasetEval
+    elif args.method in ["field_sf", "ref_field_sf"]:
         DATASET = ArcticDatasetEval
     elif args.method in ["arctic_lstm", "field_lstm"]:
         DATASET = TempoInferenceDatasetEval
@@ -26,7 +31,7 @@ def fetch_dataset_eval(args, seq=None):
 
 def fetch_dataset_devel(args, is_train, seq=None):
     split = args.trainsplit if is_train else args.valsplit
-    if args.method in ["arctic_sf"]:
+    if args.method in ["arctic_sf", "pts_arctic_sf"]:
         if is_train:
             DATASET = ArcticDataset
         else:
@@ -36,6 +41,16 @@ def fetch_dataset_devel(args, is_train, seq=None):
             DATASET = ArcticDataset
         else:
             DATASET = ArcticDataset
+    elif args.method in ["ref_field_sf"]:
+        if is_train:
+            DATASET = RefArcticDataset
+        else:
+            DATASET = RefArcticDataset
+    elif args.method in ["ref_crop_arctic_sf"]:
+        if is_train:
+            DATASET = RefCropArcticDataset
+        else:
+            DATASET = RefCropArcticDataset
     elif args.method in ["field_lstm", "arctic_lstm"]:
         if is_train:
             DATASET = TempoDataset
@@ -95,7 +110,7 @@ def fetch_dataloader(args, mode, seq=None):
     if mode == "train":
         reset_all_seeds(args.seed)
         dataset = fetch_dataset_devel(args, is_train=True)
-        if type(dataset) == ArcticDataset:
+        if type(dataset) in [ArcticDataset, RefArcticDataset, RefCropArcticDataset]:
             collate_fn = None
         else:
             collate_fn = collate_custom_fn
@@ -113,7 +128,7 @@ def fetch_dataloader(args, mode, seq=None):
             dataset = fetch_dataset_eval(args, seq=seq)
         else:
             dataset = fetch_dataset_devel(args, is_train=False, seq=seq)
-        if type(dataset) in [ArcticDataset, ArcticDatasetEval]:
+        if type(dataset) in [ArcticDataset, ArcticDatasetEval, RefArcticDataset, RefCropArcticDataset, RefCropArcticDatasetEval]:
             collate_fn = None
         else:
             collate_fn = collate_custom_fn
@@ -131,12 +146,18 @@ def fetch_dataloader(args, mode, seq=None):
 def fetch_model(args):
     if args.method in ["arctic_sf"]:
         from src.models.arctic_sf.wrapper import ArcticSFWrapper as Wrapper
+    elif args.method in ["pts_arctic_sf"]:
+        from src.models.pts_arctic_sf.wrapper import PtsArcticSFWrapper as Wrapper
     elif args.method in ["arctic_lstm"]:
         from src.models.arctic_lstm.wrapper import ArcticLSTMWrapper as Wrapper
     elif args.method in ["field_sf"]:
         from src.models.field_sf.wrapper import FieldSFWrapper as Wrapper
     elif args.method in ["field_lstm"]:
         from src.models.field_lstm.wrapper import FieldLSTMWrapper as Wrapper
+    elif args.method in ["ref_field_sf"]:
+        from src.models.ref_field_sf.wrapper import ReferencedFieldSFWrapper as Wrapper
+    elif args.method in ["ref_crop_arctic_sf"]:
+        from src.models.ref_crop_arctic_sf.wrapper import RefCropArcticSFWrapper as Wrapper
     else:
         assert False, f"Invalid method ({args.method})"
     model = Wrapper(args)
