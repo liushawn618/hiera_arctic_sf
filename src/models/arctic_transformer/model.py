@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 import common.ld_utils as ld_utils
-
 from .sub_model import Downsampler, RegressHead
 from common.xdict import xdict
 from src.nets.backbone.utils import get_backbone_info
@@ -11,13 +10,14 @@ from src.nets.hand_heads.mano_head import MANOHead
 from src.nets.obj_heads.obj_head import ArtiHead
 from src.nets.obj_heads.obj_hmr import ObjectHMR
 from src.nets.pointnet import PointNetfeat
+from src.nets.transformer import CRFormer
 
 from src.models.config import ModelConfig
 
 
-class PtsArcticSF(nn.Module):
+class ArcticTransformer(nn.Module):
     def __init__(self, backbone, focal_length, img_res, args):
-        super(PtsArcticSF, self).__init__()
+        super(ArcticTransformer, self).__init__()
         self.args = args
         self.backbone = ModelConfig.get_backbone(backbone)
         feat_dim = get_backbone_info(backbone)["n_output_channels"]
@@ -33,8 +33,8 @@ class PtsArcticSF(nn.Module):
             nn.ReLU(),
         )  # downsize image features
 
-        pt_shallow_dim = 512
-        pt_mid_dim = 512
+        pt_shallow_dim = 256
+        pt_mid_dim = 256
         self.point_backbone = PointNetfeat(
             input_dim=3 + img_down_dim,
             shallow_dim=pt_shallow_dim,
@@ -50,15 +50,17 @@ class PtsArcticSF(nn.Module):
 
         self.num_v_sub = 195  # mano subsampled
         self.num_v_o_sub = 300 * 2  # object subsampled
-        self.num_v_sub_sub = 70
-        self.num_v_o_sub_sub = 100*2  # object
+        self.num_v_sub_sub = 40
+        self.num_v_o_sub_sub = 60*2  # object
         self.downsampling_r = Downsampler(self.num_v_sub, self.num_v_sub_sub)
         self.downsampling_l = Downsampler(self.num_v_sub, self.num_v_sub_sub)
         self.downsampling_o = Downsampler(self.num_v_o_sub, self.num_v_o_sub_sub)
 
+        self.CRFormer = CRFormer(dim=pts_dim)
+
         # Arctic_sf
-        mano_feat_dim = (pts_dim + 1) * self.num_v_sub_sub
-        oject_feat_dim = (pts_dim + 2) * self.num_v_o_sub_sub
+        mano_feat_dim = pts_dim * self.num_v_sub_sub
+        oject_feat_dim = pts_dim * self.num_v_o_sub_sub
 
         self.head_r = HandHMR(mano_feat_dim, is_rhand=True, n_iter=3)
         self.head_l = HandHMR(mano_feat_dim, is_rhand=False, n_iter=3)
@@ -113,13 +115,20 @@ class PtsArcticSF(nn.Module):
         dist_or = self.dist_head_or(pts_o_feat) # (:, 600)
         dist_ol = self.dist_head_ol(pts_o_feat) # (:, 600)
 
-        features_r = torch.cat([pts_r_feat, dist_ro.unsqueeze(1)], dim=1)
-        features_l = torch.cat([pts_l_feat, dist_lo.unsqueeze(1)], dim=1)
-        features_o = torch.cat([pts_o_feat, dist_or.unsqueeze(1), dist_ol.unsqueeze(1)], dim=1)
+        pts_r_feat = self.downsampling_r(pts_r_feat)
+        pts_l_feat = self.downsampling_l(pts_l_feat)
+        pts_o_feat = self.downsampling_o(pts_o_feat)
+        
+        dist_ro = self.downsampling_r(dist_ro)
+        dist_lo = self.downsampling_l(dist_lo)
+        dist_ol = self.downsampling_o(dist_ol)
+        dist_or = self.downsampling_o(dist_or)
 
-        features_r = self.downsampling_r(features_r).view(img_num, -1)
-        features_l = self.downsampling_l(features_l).view(img_num, -1)
-        features_o = self.downsampling_o(features_o).view(img_num, -1)
+        features_r, features_l, features_o = self.CRFormer.forward(pts_r_feat, pts_l_feat, pts_o_feat, dist_ro, dist_lo, dist_or, dist_ol)
+
+        features_r = features_r.reshape(img_num, -1)
+        features_l = features_l.reshape(img_num, -1)
+        features_o = features_o.reshape(img_num, -1)
 
         return feat_vec, features_r, features_l, features_o
 

@@ -45,7 +45,7 @@ def main():
     wrapper.eval()
     wrapper.to(device)
     wrapper.model.arti_head.object_tensors.to(device)
-    # wrapper.metric_dict = []
+    #wrapper.metric_dict = []
 
     exp_key = op.abspath(args.load_ckpt).split("/")[-3]
     if exp_key in model_dependencies.keys():
@@ -101,7 +101,7 @@ def main():
         out_list = []
         val_loader = factory.fetch_dataloader(args, "val", seq)
         with torch.no_grad():
-            for idx, batch in tqdm(enumerate(val_loader), total=len(val_loader)):
+            for idx, batch in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"{seq_idx + 1}/{len(seqs)} {seq}"):
                 batch = thing.thing2dev(batch, device)
                 inputs, targets, meta_info = batch
                 if "submit_" in args.extraction_mode:

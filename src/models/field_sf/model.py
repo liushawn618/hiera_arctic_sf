@@ -6,6 +6,7 @@ from src.nets.backbone.utils import get_backbone_info
 from src.nets.obj_heads.obj_head import ArtiHead
 from src.nets.pointnet import PointNetfeat
 
+from src.models.config import ModelConfig
 
 class Upsampler(nn.Module):
     #upsampling layer
@@ -43,13 +44,7 @@ class RegressHead(nn.Module):
 class FieldSF(nn.Module):
     def __init__(self, backbone, focal_length, img_res):
         super().__init__()
-        if backbone == "resnet18":
-            from src.nets.backbone.resnet import resnet18 as resnet
-        elif backbone == "resnet50":
-            from src.nets.backbone.resnet import resnet50 as resnet
-        else:
-            assert False
-        self.backbone = resnet(pretrained=True)
+        self.backbone = ModelConfig.get_backbone(backbone)
         feat_dim = get_backbone_info(backbone)["n_output_channels"]
         self.arti_head = ArtiHead(focal_length=focal_length, img_res=img_res)
         

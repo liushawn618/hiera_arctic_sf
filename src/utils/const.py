@@ -6,7 +6,7 @@ import sys
 args = construct_args()
 experiment, args = comet_utils.init_experiment(args)
 comet_utils.save_args(args, save_keys=["comet_key"])
-if sys.argv[0].split("/")[-1].split(".")[0] == "train" and not args.mute:
+if not args.mute:
     input(f"total epochs:{args.num_epoch}\nlog dir:{args.log_dir}")
 args = init_ref_args(args)
 

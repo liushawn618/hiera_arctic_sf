@@ -13,7 +13,7 @@ from src.datasets.tempo_inference_dataset_eval import TempoInferenceDatasetEval
 
 
 def fetch_dataset_eval(args, seq=None):
-    if args.method in ["arctic_sf", "pts_arctic_sf"]:
+    if args.method in ["arctic_sf", "pts_arctic_sf", "arctic_tf"]:
         DATASET = ArcticDatasetEval
     elif args.method in ["ref_crop_arctic_sf"]:
         DATASET = RefCropArcticDatasetEval
@@ -31,7 +31,7 @@ def fetch_dataset_eval(args, seq=None):
 
 def fetch_dataset_devel(args, is_train, seq=None):
     split = args.trainsplit if is_train else args.valsplit
-    if args.method in ["arctic_sf", "pts_arctic_sf"]:
+    if args.method in ["arctic_sf", "pts_arctic_sf", "arctic_tf"]:
         if is_train:
             DATASET = ArcticDataset
         else:
@@ -107,10 +107,14 @@ def collate_custom_fn(data_list):
 
 
 def fetch_dataloader(args, mode, seq=None):
+    devel_datasets = {ArcticDataset, RefArcticDataset, RefCropArcticDataset}
+    eval_datasets = {ArcticDatasetEval, RefCropArcticDatasetEval}
+
     if mode == "train":
         reset_all_seeds(args.seed)
         dataset = fetch_dataset_devel(args, is_train=True)
-        if type(dataset) in [ArcticDataset, RefArcticDataset, RefCropArcticDataset]:
+        # if type(dataset) in [ArcticDataset, RefArcticDataset, RefCropArcticDataset]:
+        if type(dataset) in devel_datasets:
             collate_fn = None
         else:
             collate_fn = collate_custom_fn
@@ -128,7 +132,8 @@ def fetch_dataloader(args, mode, seq=None):
             dataset = fetch_dataset_eval(args, seq=seq)
         else:
             dataset = fetch_dataset_devel(args, is_train=False, seq=seq)
-        if type(dataset) in [ArcticDataset, ArcticDatasetEval, RefArcticDataset, RefCropArcticDataset, RefCropArcticDatasetEval]:
+        # if type(dataset) in [ArcticDataset, ArcticDatasetEval, RefArcticDataset, RefCropArcticDataset, RefCropArcticDatasetEval]:
+        if type(dataset) in devel_datasets | eval_datasets:
             collate_fn = None
         else:
             collate_fn = collate_custom_fn
@@ -146,6 +151,8 @@ def fetch_dataloader(args, mode, seq=None):
 def fetch_model(args):
     if args.method in ["arctic_sf"]:
         from src.models.arctic_sf.wrapper import ArcticSFWrapper as Wrapper
+    elif args.method in ["arctic_tf"]:
+        from src.models.arctic_transformer.wrapper import ArcticTransformerWrapper as Wrapper
     elif args.method in ["pts_arctic_sf"]:
         from src.models.pts_arctic_sf.wrapper import PtsArcticSFWrapper as Wrapper
     elif args.method in ["arctic_lstm"]:

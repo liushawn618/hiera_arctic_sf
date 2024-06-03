@@ -58,7 +58,7 @@ class RefCropArcticDataset(ArcticDataset):
         inputs = self._load_ref_img(imgname, inputs)
         return inputs, targets, meta_info
     def __init__(self, args, split, seq=None):
-        super().__init__(args, split, seq=None)
+        super().__init__(args, split, seq=seq)
         self.reference_exp_dir = args.reference_exp_folder # logs/3558f1342
         if args.ref_mode == "online":
             self.ref_online = True

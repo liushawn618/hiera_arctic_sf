@@ -8,23 +8,21 @@ from src.nets.hand_heads.mano_head import MANOHead
 from src.nets.obj_heads.obj_head import ArtiHead
 from src.nets.obj_heads.obj_hmr import ObjectHMR
 
+from src.models.config import ModelConfig
 
 class RefCropArcticSF(nn.Module):
     def __init__(self, backbone, focal_length, img_res, args):
         super(RefCropArcticSF, self).__init__()
         self.args = args
-        if backbone == "resnet50":
-            from src.nets.backbone.resnet import resnet50 as resnet
-        elif backbone == "resnet18":
-            from src.nets.backbone.resnet import resnet18 as resnet
-        else:
-            assert False
-        self.backbone = resnet(pretrained=True)
+        self.backbone = ModelConfig.get_backbone(backbone)
         feat_dim = get_backbone_info(backbone)["n_output_channels"]
         self.head_r = HandHMR(feat_dim, is_rhand=True, n_iter=3)
         self.head_l = HandHMR(feat_dim, is_rhand=False, n_iter=3)
-
         self.head_o = ObjectHMR(feat_dim, n_iter=3)
+
+        self.head_r_cam = HandHMR(feat_dim, is_rhand=True, n_iter=3)
+        self.head_l_cam = HandHMR(feat_dim, is_rhand=False, n_iter=3)
+        self.head_o_cam = ObjectHMR(feat_dim, n_iter=3)
 
         self.mano_r = MANOHead(
             is_rhand=True, focal_length=focal_length, img_res=img_res
@@ -63,9 +61,9 @@ class RefCropArcticSF(nn.Module):
         
         feat_vec = features.view(features.shape[0], features.shape[1], -1).sum(dim=2)
 
-        hmr_output_r = self.head_r(features)
-        hmr_output_l = self.head_l(features)
-        hmr_output_o = self.head_o(features)
+        hmr_output_r = self.head_r_cam(features)
+        hmr_output_l = self.head_l_cam(features)
+        hmr_output_o = self.head_o_cam(features)
 
         # weak perspective
         root_r = hmr_output_r["cam_t.wp"]
@@ -95,9 +93,9 @@ class RefCropArcticSF(nn.Module):
             K=K,
         )
 
-        mano_output_r["cam_t.wp.init.r"] = hmr_output_r_ref["cam_t.wp.init"]
-        mano_output_l["cam_t.wp.init.l"] = hmr_output_l_ref["cam_t.wp.init"]
-        arti_output["cam_t.wp.init"] = hmr_output_obj_ref["cam_t.wp.init"]
+        mano_output_r["cam_t.wp.init.r"] = hmr_output_r["cam_t.wp.init"]
+        mano_output_l["cam_t.wp.init.l"] = hmr_output_l["cam_t.wp.init"]
+        arti_output["cam_t.wp.init"] = hmr_output_o["cam_t.wp.init"]
 
         mano_output_r = ld_utils.prefix_dict(mano_output_r, "mano.")
         mano_output_l = ld_utils.prefix_dict(mano_output_l, "mano.")

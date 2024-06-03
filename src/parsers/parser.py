@@ -6,16 +6,20 @@ from common.args_utils import set_default_params
 from src.parsers.generic_parser import add_generic_args
 from src.parsers.ref_parser import add_ref_parser
 
+from src.models.config import ModelConfig
+
 
 def construct_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--no_log", action="store_true")
-    parser.add_argument("--clear_log", action="store_true")
+    # parser.add_argument("--no_log", action="store_true")
+    # parser.add_argument("--clear_log", action="store_true")
+    parser.add_argument("--hiera", action="store_true")
+    parser.add_argument("--backbone", default=None, choices=[None, "resnet18", "resnet50", "hiera"])
     parser.add_argument(
         "--method",
         type=str,
         default="arctic_sf",
-        choices=[None, "arctic_sf", "pts_arctic_sf", "arctic_lstm", "field_sf", "field_lstm", "ref_field_sf", "ref_crop_arctic_sf"],
+        choices=[None, "arctic_sf", "pts_arctic_sf", "arctic_tf", "arctic_lstm", "field_sf", "field_lstm", "ref_field_sf", "ref_crop_arctic_sf"],
     )
 
     parser.add_argument("--exp_key", type=str, default=None)
@@ -28,8 +32,13 @@ def construct_args():
     parser = add_ref_parser(parser)
     args = EasyDict(vars(parser.parse_args()))
 
-    if args.method in ["arctic_sf", "pts_arctic_sf"]:
+    if args.backbone is not None:
+        ModelConfig.backbone = args.backbone
+
+    if args.method in ["arctic_sf", "pts_arctic_sf", "arctic_tf"]:
         import src.parsers.configs.arctic_sf as config
+    elif args.method in ["arctic_tf"]:
+        import src.parsers.configs.arctic_transformer as config
     elif args.method in ["ref_crop_arctic_sf"]:
         import src.parsers.configs.ref_crop_arctic_sf as config
     elif args.method in ["arctic_lstm"]:
