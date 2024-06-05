@@ -1,4 +1,3 @@
-import comet_ml
 import os.path as op
 import sys
 from pprint import pformat
@@ -17,8 +16,7 @@ from src.utils.const import args
 
 
 def main(args):
-    input(f"total epochs:{args.num_epoch}\nlog dir:{args.log_dir}")
-    if args.experiment is not None:
+    if args.get("experiment") is not None:
         comet_utils.log_exp_meta(args)
     reset_all_seeds(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -73,10 +71,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    try:
-        main(args)
-    except:
-        import os
-        os.system(f"rm -r {args.log_dir}")
-        print(f"removed {args.log_dir}")
-        exit()
+    main(args)
+

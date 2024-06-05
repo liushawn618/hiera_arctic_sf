@@ -45,6 +45,9 @@ class ArcticSF(nn.Module):
         hmr_output_r = self.head_r(features, not self.args.hiera)
         hmr_output_l = self.head_l(features, not self.args.hiera)
         hmr_output_o = self.head_o(features, not self.args.hiera)
+        # hmr_output_r = self.head_r(features)
+        # hmr_output_l = self.head_l(features)
+        # hmr_output_o = self.head_o(features)
 
         # weak perspective
         root_r = hmr_output_r["cam_t.wp"]

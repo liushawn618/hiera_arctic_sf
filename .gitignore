@@ -3,6 +3,7 @@ __pycache__
 data
 .old_data
 .vscode
+.temp
 logs
 downloads
 outputs
@@ -12,3 +13,4 @@ render_out
 .desperated
 metrics_result
 .env
+test/**

@@ -12,7 +12,8 @@ from src.models.config import ModelConfig
 def construct_args():
     parser = argparse.ArgumentParser()
     # parser.add_argument("--no_log", action="store_true")
-    # parser.add_argument("--clear_log", action="store_true")
+    parser.add_argument("--name", default=None)
+    parser.add_argument("--demo", action="store_true")
     parser.add_argument("--hiera", action="store_true")
     parser.add_argument("--backbone", default=None, choices=[None, "resnet18", "resnet50", "hiera"])
     parser.add_argument(
@@ -34,6 +35,8 @@ def construct_args():
 
     if args.backbone is not None:
         ModelConfig.backbone = args.backbone
+        if args.backbone == "hiera":
+            args.hiera = True
 
     if args.method in ["arctic_sf", "pts_arctic_sf", "arctic_tf"]:
         import src.parsers.configs.arctic_sf as config

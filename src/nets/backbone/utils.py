@@ -3,6 +3,7 @@ def get_backbone_info(backbone):
         "resnet18": {"n_output_channels": 512, "downsample_rate": 4},
         "resnet34": {"n_output_channels": 512, "downsample_rate": 4},
         "resnet50": {"n_output_channels": 2048, "downsample_rate": 4},
+        # "hiera": {"n_output_channels": 768, "downsample_rate": 32},
         "hiera": {"n_output_channels": 1000},
         "resnet50_adf_dropout": {"n_output_channels": 2048, "downsample_rate": 4},
         "resnet50_dropout": {"n_output_channels": 2048, "downsample_rate": 4},
