@@ -2,6 +2,7 @@
 This file contains functions that are used to perform data augmentation.
 """
 import cv2
+import os
 import numpy as np
 import torch
 from loguru import logger
@@ -280,17 +281,20 @@ def denormalize_images(images):
     return images
 
 
-def read_img(img_fn, dummy_shape):
+def read_img(img_fn, dummy_shape, nonexsit_ok=False):
     try:
         cv_img = _read_img(img_fn)
     except:
-        logger.warning(f"Unable to load {img_fn}")
+        if not nonexsit_ok:
+            logger.warning(f"Unable to load {img_fn}")
         cv_img = np.zeros(dummy_shape, dtype=np.float32)
         return cv_img, False
     return cv_img, True
 
 
 def _read_img(img_fn):
+    if not os.path.exists(img_fn):
+        raise FileNotFoundError(f"Unable to load {img_fn}")
     img = cv2.cvtColor(cv2.imread(img_fn), cv2.COLOR_BGR2RGB)
     return img.astype(np.float32)
 

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 import common.ld_utils as ld_utils
@@ -14,6 +15,7 @@ class RefCropArcticSF(nn.Module):
     def __init__(self, backbone, focal_length, img_res, args):
         super(RefCropArcticSF, self).__init__()
         self.args = args
+        self.no_crop = args.no_crop
         self.backbone = ModelConfig.get_backbone(backbone)
         feat_dim = get_backbone_info(backbone)["n_output_channels"]
         self.head_r = HandHMR(feat_dim, is_rhand=True, n_iter=3)
@@ -38,9 +40,14 @@ class RefCropArcticSF(nn.Module):
         self.focal_length = focal_length
 
     def forward(self, inputs, meta_info):
-        images_r=inputs["ref_img_r_rgb"]
-        images_l=inputs["ref_img_l_rgb"]
-        images_obj=inputs["ref_img_o_rgb"]
+        if self.no_crop:
+            images_r=inputs["img"]
+            images_l=inputs["img"]
+            images_obj=inputs["img"]
+        else:
+            images_r=inputs["ref_img_r_rgb"]
+            images_l=inputs["ref_img_l_rgb"]
+            images_obj=inputs["ref_img_o_rgb"]
         
         features_r = self.backbone(images_r)
         features_l = self.backbone(images_l)

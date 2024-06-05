@@ -7,4 +7,5 @@ def add_ref_parser(parser:argparse.ArgumentParser):
     parser.add_argument("--ref_setup", type=str, choices=["p1", "p2"], default=None)
     parser.add_argument("--ref_method", type=str, default=None)
     parser.add_argument("--ref_ckpt", type=str, default=None)
+    parser.add_argument("--no_crop", action="store_true")
     return parser

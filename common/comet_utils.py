@@ -2,10 +2,10 @@ import json
 import os
 import os.path as op
 import time
-
 import comet_ml
 import numpy as np
 import torch
+from easydict import EasyDict
 from loguru import logger
 from tqdm import tqdm
 
@@ -15,7 +15,7 @@ from src.datasets.dataset_utils import copy_repo_arctic
 DUMMY_EXP = "xxxxxxxxx"
 
 
-def add_paths(args):
+def add_paths(args:EasyDict):
     exp_key = args.exp_key
     args_p = f"./logs/{exp_key}/args.json"
     ckpt_p = f"./logs/{exp_key}/checkpoints/last.ckpt"
@@ -64,13 +64,21 @@ def log_exp_meta(args):
     args.experiment.log_parameters(args)
 
 
-def init_experiment(args):
+def init_experiment(args:EasyDict):
     if args.resume_ckpt != "":
         args.exp_key = args.resume_ckpt.split("/")[1]
     if args.fast_dev_run:
         args.exp_key = DUMMY_EXP
     if args.exp_key == "":
-        args.exp_key = generate_exp_key()
+        time_str = time.strftime("%m.%d|%H:%M")
+        if args.name is None:
+            exp_name = f"{args.method}_{args.setup}-{time_str}"
+        else:
+            exp_name = args.name
+        hash_key = generate_exp_key()
+        args.exp_key = f"{exp_name}-{hash_key}"
+        if args.demo:
+            args.exp_key = "demo:" + args.exp_key
     args = add_paths(args)
     if op.exists(args.args_p) and args.exp_key not in [DUMMY_EXP]:
         with open(args.args_p, "r") as f:

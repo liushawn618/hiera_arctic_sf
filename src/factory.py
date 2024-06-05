@@ -118,6 +118,12 @@ def fetch_dataloader(args, mode, seq=None):
             collate_fn = None
         else:
             collate_fn = collate_custom_fn
+
+        if args.demo:
+            train_len = len(dataset)
+            demo_train_len = min(train_len, 150000)
+            dataset, test_set = torch.utils.data.random_split(dataset, [demo_train_len, train_len - demo_train_len])
+
         return DataLoader(
             dataset=dataset,
             batch_size=args.batch_size,
