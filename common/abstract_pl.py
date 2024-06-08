@@ -148,7 +148,8 @@ class AbstractPL(pl.LightningModule):
         return loss_metric_dict
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.args.lr)
+        # optimizer = torch.optim.Adam(self.parameters(), lr=self.args.lr)
+        optimizer = torch.optim.Adam(self.trainer.model.parameters(), lr=self.args.lr)
         scheduler = optim.lr_scheduler.MultiStepLR(
             optimizer, self.args.lr_dec_epoch, gamma=self.args.lr_decay, verbose=True
         )

@@ -11,4 +11,6 @@ def init_ref_args(args:EasyDict):
             print(f"WARN {args.ref_setup} != {args.setup}")
         if args.ref_ckpt is None:
             args.ref_ckpt = os.path.join(args.reference_exp_folder, "checkpoints/last.ckpt")
+    if args.ref_crop_folder is None:
+        args.ref_crop_folder = os.path.join(args.reference_exp_folder, "render")
     return args

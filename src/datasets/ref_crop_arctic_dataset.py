@@ -42,10 +42,10 @@ class RefCropArcticDataset(ArcticDataset):
             ref_img_name = f"{img_basename}.png"
             seq_name = "_".join(imgname.split("/")[-4:-1])
             modes = ["gt_mesh_l", "gt_mesh_r", "gt_mesh_obj"]
-            sub_types = ["crop_image", "crop_mask"]
+            sub_types = ["crop_image"]#, "crop_mask"]
             for mode, mode_alias in zip(modes, ["l", "r", "o"]):
                 for sub_type, sub_type_alias in zip(sub_types, ["rgb", "mask"]):
-                    ref_img_path = os.path.join(self.reference_exp_dir, "render", seq_name, mode, "images", sub_type, ref_img_name)
+                    ref_img_path = os.path.join(self.reference_exp_dir, seq_name, mode, "images", sub_type, ref_img_name)
                     ref_img, img_status = read_img(ref_img_path, self.target_size + (3,), nonexsit_ok=True)
                     ref_img = cv2.resize(ref_img, self.target_size)
                     ref_img = self.plain_process_rgb(ref_img)
@@ -59,7 +59,7 @@ class RefCropArcticDataset(ArcticDataset):
         return inputs, targets, meta_info
     def __init__(self, args, split, seq=None):
         super().__init__(args, split, seq=seq)
-        self.reference_exp_dir = args.reference_exp_folder # logs/3558f1342
+        self.reference_exp_dir = args.ref_crop_folder # logs/3558f1342
         if args.ref_mode == "online":
             self.ref_online = True
         else:

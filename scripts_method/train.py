@@ -5,7 +5,8 @@ from pprint import pformat
 import pytorch_lightning as pl
 import torch
 from loguru import logger
-from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
+from pytorch_lightning.callbacks import ModelCheckpoint#, ModelSummary
+from pytorch_lightning.utilities.model_summary import summarize
 
 sys.path.append(".")
 
@@ -20,13 +21,13 @@ def main(args):
         comet_utils.log_exp_meta(args)
     reset_all_seeds(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    wrapper = factory.fetch_model(args).to(device)
+    wrapper = factory.fetch_model(args)#.to(device)
     if args.load_ckpt != "":
         ckpt = torch.load(args.load_ckpt)
         wrapper.load_state_dict(ckpt["state_dict"])
         logger.info(f"Loaded weights from {args.load_ckpt}")
 
-    wrapper.model.arti_head.object_tensors.to(device)
+    # wrapper.model.arti_head.object_tensors.to(device)
 
     ckpt_callback = ModelCheckpoint(
         monitor="loss__val",
@@ -40,13 +41,16 @@ def main(args):
 
     pbar_cb = pl.callbacks.progress.TQDMProgressBar(refresh_rate=1)
 
-    model_summary_cb = ModelSummary(max_depth=3)
-    callbacks = [ckpt_callback, pbar_cb, model_summary_cb]
+    # model_summary_cb = ModelSummary(max_depth=3)
+    print(summarize(lightning_module=wrapper, max_depth=3))
+    callbacks = [ckpt_callback, pbar_cb] # ,model_summary_cb]
     trainer = pl.Trainer(
         gradient_clip_val=args.grad_clip,
         gradient_clip_algorithm="norm",
         accumulate_grad_batches=args.acc_grad,
-        devices=1,
+        devices=args.num_gpus,
+        # strategy="ddp_find_unused_parameters_true",
+        strategy="fsdp",
         accelerator="gpu",
         logger=None,
         min_epochs=args.num_epoch,
@@ -68,8 +72,27 @@ def main(args):
     val_loaders = [factory.fetch_dataloader(args, "val")]
     wrapper.set_training_flags()  # load weights if needed
     trainer.fit(wrapper, train_loader, val_loaders, ckpt_path=ckpt_path)
+    if args.num_gpus > 1:
+        trainer.save_checkpoint("distributed_model.ckpt")
 
+
+def just_clear_log():
+    if not args.clear_log:
+        return
+    import os
+    os.rmdir(os.path.join("logs",args.exp_key))
 
 if __name__ == "__main__":
-    main(args)
+    try:
+        main(args)
+    except RuntimeError as e:
+        if "CUDA out of memory" in str(e):
+            logger.error("CUDA out of memory. Please reduce batch size or image size.")
+            import os
+            just_clear_log()
+            os._exit(1)
+        else:
+            raise e
+    finally:
+        just_clear_log()
 

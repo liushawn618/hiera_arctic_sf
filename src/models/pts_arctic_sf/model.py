@@ -50,8 +50,11 @@ class PtsArcticSF(nn.Module):
 
         self.num_v_sub = 195  # mano subsampled
         self.num_v_o_sub = 300 * 2  # object subsampled
-        self.num_v_sub_sub = 70
-        self.num_v_o_sub_sub = 100*2  # object
+        
+        hand_point_num = 70 if args.pts_hand_point_num is None else args.pts_hand_point_num
+        object_point_num = 100 if args.pts_object_point_num is None else args.pts_object_point_num
+        self.num_v_sub_sub = hand_point_num
+        self.num_v_o_sub_sub = object_point_num*2  # object
         self.downsampling_r = Downsampler(self.num_v_sub, self.num_v_sub_sub)
         self.downsampling_l = Downsampler(self.num_v_sub, self.num_v_sub_sub)
         self.downsampling_o = Downsampler(self.num_v_o_sub, self.num_v_o_sub_sub)

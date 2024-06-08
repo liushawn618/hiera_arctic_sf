@@ -47,6 +47,9 @@ class ObjectTensors(nn.Module):
     ):
         self._sanity_check(angles, global_orient, transl, query_names, fwd_template)
 
+        if self.obj_tensors["z_axis"].device != angles.device:
+            self.to(angles.device)
+
         # store output
         out = xdict()
 
@@ -133,6 +136,7 @@ class ObjectTensors(nn.Module):
         return out
 
     def to(self, dev):
+        super(ObjectTensors, self).to(dev)
         self.obj_tensors = thing.thing2dev(self.obj_tensors, dev)
         self.dev = dev
 

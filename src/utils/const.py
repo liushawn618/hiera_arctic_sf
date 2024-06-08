@@ -6,7 +6,7 @@ import sys
 args = construct_args()
 experiment, args = comet_utils.init_experiment(args)
 comet_utils.save_args(args, save_keys=["comet_key"])
-if not args.mute:
+if not args.mute and args.num_gpus == 1:
     input(f"total epochs:{args.num_epoch}\nlog dir:{args.log_dir}")
 args = init_ref_args(args)
 

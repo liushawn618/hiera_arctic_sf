@@ -54,6 +54,8 @@ def create_files(args):
     if args.cluster:
         os.makedirs(op.dirname(args.run_p), exist_ok=True)
         copy_repo_arctic(args.exp_key)
+    if args.num_gpus > 1:
+        os.makedirs(op.join(args.log_dir,"lightning_logs"), exist_ok=True)
 
 
 def log_exp_meta(args):
