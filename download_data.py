@@ -4,6 +4,8 @@ import os.path as op
 import warnings
 
 import requests
+from httplib2 import socks
+import socket
 from loguru import logger
 from tqdm import tqdm
 
@@ -11,6 +13,8 @@ warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
 
 def download_data(url_file, out_folder, dry_run):
+    # Proxy Settings    
+    
     # Define the username and password
     if "smplx" in url_file:
         flag = "SMPLX"

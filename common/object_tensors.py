@@ -39,9 +39,9 @@ class ObjectTensors(nn.Module):
 
     def forward_7d_batch(
         self,
-        angles: (None, torch.Tensor),
-        global_orient: (None, torch.Tensor),
-        transl: (None, torch.Tensor),
+        angles: None| torch.Tensor,
+        global_orient: None| torch.Tensor,
+        transl: None| torch.Tensor,
         query_names: list,
         fwd_template: bool,
     ):

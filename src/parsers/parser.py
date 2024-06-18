@@ -5,15 +5,17 @@ from easydict import EasyDict
 from common.args_utils import set_default_params
 from src.parsers.generic_parser import add_generic_args
 from src.parsers.ref_parser import add_ref_parser
+from src.parsers.pts_parser import add_pts_parser
 
 from src.models.config import ModelConfig
 
 
-def construct_args():
+def construct_args(str_list_args:list[str]|None=None):
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--no_log", action="store_true")
+    parser.add_argument("--clear_log", action="store_true")
     parser.add_argument("--name", default=None)
     parser.add_argument("--demo", action="store_true")
+    parser.add_argument("--num_gpus", default=1, type=int, help="number of gpus to use")
     parser.add_argument("--backbone", default="resnet50", choices=["resnet18", "resnet50", "hiera"])
     parser.add_argument(
         "--method",
@@ -30,7 +32,8 @@ def construct_args():
     parser.add_argument("--local", action="store_true")
     parser = add_generic_args(parser)
     parser = add_ref_parser(parser)
-    args = EasyDict(vars(parser.parse_args()))
+    parser = add_pts_parser(parser)
+    args = EasyDict(vars(parser.parse_args(str_list_args)))
 
     if args.backbone is not None:
         ModelConfig.backbone = args.backbone

@@ -21,7 +21,7 @@ class AbstractPL(pl.LightningModule):
         high_loss_val,
     ):
         super().__init__()
-        self.experiment = args.experiment
+        self.experiment = args.get("experiment")
         self.args = args
         self.tracked_metric = tracked_metric
         self.metric_init_val = metric_init_val

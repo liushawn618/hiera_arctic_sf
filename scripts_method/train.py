@@ -50,7 +50,7 @@ def main(args):
         accumulate_grad_batches=args.acc_grad,
         devices=args.num_gpus,
         # strategy="ddp_find_unused_parameters_true",
-        strategy="fsdp",
+        strategy="fsdp" if args.num_gpus > 1 else "auto",
         accelerator="gpu",
         logger=None,
         min_epochs=args.num_epoch,
@@ -81,6 +81,7 @@ def just_clear_log():
         return
     import os
     os.rmdir(os.path.join("logs",args.exp_key))
+    logger.info("Logs cleared")
 
 if __name__ == "__main__":
     try:

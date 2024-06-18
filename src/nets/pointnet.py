@@ -104,10 +104,11 @@ class STNkd(nn.Module):
 class PointNetfeat(nn.Module):
     def __init__(self, input_dim, shallow_dim, mid_dim, out_dim, global_feat=False):
         super(PointNetfeat, self).__init__()
+        #pointnet.shallow 这个浅层用于初步提取点云数据的特征。
         self.shallow_layer = nn.Sequential(
             nn.Conv1d(input_dim, shallow_dim, 1), nn.BatchNorm1d(shallow_dim)
         )
-
+        #pointnet.deep 用于进一步处理浅层特征，以生成更复杂的特征表示。
         self.base_layer = nn.Sequential(
             nn.Conv1d(shallow_dim, mid_dim, 1),
             nn.BatchNorm1d(mid_dim),
@@ -118,13 +119,15 @@ class PointNetfeat(nn.Module):
 
         self.global_feat = global_feat
         self.out_dim = out_dim
-
+     
+     #输入张量x，通常是一个形状为(batch_size, input_dim, n_pts)的张量，其中batch_size是批次大小，input_dim是输入数据的维度，n_pts是每个样本中的点的数量。
     def forward(self, x):
         n_pts = x.size()[2]
         x = self.shallow_layer(x)
         pointfeat = x
 
         x = self.base_layer(x)
+        #使用最大池化操作，沿第三维（点的数量）取最大值，并保持维度不变。
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, self.out_dim)
 
@@ -134,4 +137,5 @@ class PointNetfeat(nn.Module):
             return x, trans, trans_feat
         else:
             x = x.view(-1, self.out_dim, 1).repeat(1, 1, n_pts)
+            #使得每个点都有全局特征和局部特征
             return torch.cat([x, pointfeat], 1), trans, trans_feat

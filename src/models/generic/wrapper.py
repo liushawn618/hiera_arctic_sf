@@ -18,6 +18,17 @@ def mul_loss_dict(loss_dict):
         loss_dict[key] = loss * weight
     return loss_dict
 
+def snapshot_io(meta_info, pred, target):
+    for k in pred.keys():
+        # save to test/data/pred
+        torch.save(pred[k], f"test/data/pred/{k}.pt")
+    for k in target.keys():
+        # save to test/data/target
+        torch.save(target[k], f"test/data/target/{k}.pt")
+    for k in meta_info.keys():
+        # save to test/data/meta_info
+        torch.save(meta_info[k], f"test/data/meta_info/{k}.pt")
+
 
 class GenericWrapper(AbstractPL):
     def __init__(self, args):
@@ -29,6 +40,7 @@ class GenericWrapper(AbstractPL):
             high_loss_val=float("inf"),
         )
         self.args = args
+        # TODO migrate to configure_model as best practice
         self.mano_r = build_mano_aa(is_rhand=True)
         self.mano_l = build_mano_aa(is_rhand=False)
         self.add_module("mano_r", self.mano_r)
@@ -177,6 +189,11 @@ class GenericWrapper(AbstractPL):
             mydict = mydict.detach()
             return mydict
         return out_dict, loss_dict
+
+    def to(self, *args, **kwargs):
+        super().to(*args, **kwargs)
+        self.model.arti_head.object_tensors.to(*args, **kwargs)
+        return self
 
     def evaluate_metrics(self, pred, targets, meta_info, specs):
         metric_dict = xdict()

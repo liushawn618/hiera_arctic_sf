@@ -18,7 +18,7 @@ from common.viewer import ARCTICViewer
 class DataViewer(ARCTICViewer):
     def __init__(
         self,
-        render_types=["rgb", "depth", "mask"],
+        render_types= ["rgb", "video", "mask"], #["rgb", "depth", "mask"],
         interactive=True,
         size=(2024, 2024),
     ):
@@ -58,11 +58,11 @@ class DataViewer(ARCTICViewer):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--view_idx", type=int, default=1)
-    parser.add_argument("--seq_p", type=str, default=None)
-    parser.add_argument("--headless", action="store_true")
-    parser.add_argument("--mano", action="store_true")
-    parser.add_argument("--smplx", action="store_true")
+    parser.add_argument("--view_idx", type=int)
+    parser.add_argument("--seq_p", type=str, default="outputs/processed_verts/seqs/s01/capsulemachine_use_01.npy")
+    parser.add_argument("--headless", action="store_true",default="True")
+    parser.add_argument("--mano", action="store_true",default="True")
+    parser.add_argument("--smplx", action="store_true",default="True")
     parser.add_argument("--object", action="store_true")
     parser.add_argument("--no_image", action="store_true")
     parser.add_argument("--distort", action="store_true")

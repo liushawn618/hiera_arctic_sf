@@ -9,6 +9,7 @@ downloads
 outputs
 metrics_results
 render_out
+temp_output
 pretrained
 .cometml-runs
 .desperated

@@ -7,5 +7,6 @@ def add_ref_parser(parser:argparse.ArgumentParser):
     parser.add_argument("--ref_setup", type=str, choices=["p1", "p2"], default=None)
     parser.add_argument("--ref_method", type=str, default=None)
     parser.add_argument("--ref_ckpt", type=str, default=None)
+    parser.add_argument("--ref_crop_folder", type=str, default=None, help="folder of seqs crop img like 'logs/3558f1342/render'")
     parser.add_argument("--no_crop", action="store_true")
     return parser
